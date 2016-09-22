@@ -1,0 +1,60 @@
+@sidebar-bg: lightgrey;
+
+.disable-user-select() {
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  .disable-user-select();
+}
+
+#header {
+  width:100%;
+  background-color: darken(@sidebar-bg, 20%);
+  h2 {
+    padding: 8px;
+  }
+}
+
+#content {
+  display: table;
+  height:100%
+}
+
+#sidebar {
+  display: table-cell;
+  position:relative;
+  width: 200px;
+  height: 100%;
+  background-color: @sidebar-bg;
+  padding: 8px;
+}
+
+#canvas-container {
+  display: table-cell;
+  width: 100%;
+  position:relative;
+
+  canvas {
+    display: block;
+    position: absolute;
+    top: 8px;
+    bottom: 0;
+    left: 8px;
+    right: 0;
+    cursor: crosshair;
+  }
+}
+
+

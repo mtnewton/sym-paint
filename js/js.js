@@ -1,55 +1,82 @@
 (function ($) {
 
 
-    var bc = document.getElementById("backgroundCanvas"), bctx;
-    var mc = document.getElementById("mainCanvas"), mctx, size;
-    var c = document.getElementById("drawingCanvas"), ctx;
-    var $segmentInput = $("#segment-input"), segmentCount;
-
+    var cs = document.getElementById("c-segments"), csctx, size;
+    var c = document.getElementById("c-input"), ctx;
+    var layersContainer = document.getElementById("layers-container");
+    var cc, ccctx; //The current canvas and context.
+    var segments; //current number of segments for this layer.
+    var $segmentInput = $("#segment-input");
+    var newLayerButton = document.getElementById('new-layer-button');
     var prevX, prevY, currX, currY, flag = false, dot_flag = false;
+    var layers = [], currentLayer;
 
 
-    function initCanvas() {
-        var wWidth = $(window).width();
-        var wHeight = $(window).height();
-        size = Math.min(wWidth, wHeight) - 10;
-        c.width  = mc.width  = bc.width  = size;
-        c.height = mc.height = bc.height = size;
+
+    function init() {
+        var canvasContainer = $('#canvas-container');
+        var wWidth = canvasContainer.width();
+        var wHeight = canvasContainer.height()-$('#header').height();
+        size = Math.min(wWidth, wHeight)-16;
+        cs.width = c.width = size;
+        cs.height = c.height = size;
+        csctx = cs.getContext('2d');
         ctx = c.getContext('2d');
-        mctx = mc.getContext('2d');
-        bctx = bc.getContext('2d');
-        readSegments();
         ctx.lineWidth = 2;
+        newLayer(8);
+        changeToLayer(0);
+        startListeners();
     }
 
-    function readSegments() {
-        segmentCount = parseInt($segmentInput.val());
-
-        bctx.save();
-        bctx.clearRect(0, 0, size, size);
-        bctx.strokeStyle = "#D3D3D3";
-        bctx.beginPath();
-        bctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-        bctx.stroke();
-        bctx.restore();
-
+    function changeToLayer(layerIndex) {
+        ctx.clearRect(0, 0, size, size);
+        currentLayer = layerIndex;
+        segments = layers[layerIndex].segments;
+        cc = layers[layerIndex];
+        ccctx = cc.getContext('2d');
+        updateLayersContainer();
         drawSegments();
     }
 
+    function newLayer(segmentCount) {
+        var newCanvas = document.createElement('canvas');
+        newCanvas.id = (new Date()).getTime();
+        newCanvas.width = size;
+        newCanvas.height = size;
+        newCanvas.segments = segmentCount;
+        layers.push(newCanvas);
+        $(c).before(newCanvas);
+        updateLayersContainer();
+        changeToLayer(layers.length-1);
+    }
+
+    function updateLayersContainer(){
+        layersContainer = $('#layers-container');
+        layersContainer.html("");
+        for (var i=0; i<layers.length; i++) {
+            layersContainer.append(layers[i].id+"\n");
+        }
+    }
+
     function drawSegments() {
-        bctx.save();
-        bctx.strokeStyle = "#D3D3D3";
+
+        csctx.save();
+        csctx.clearRect(0, 0, size, size);
+        csctx.strokeStyle = "#D3D3D3";
+        csctx.beginPath();
+        csctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+        csctx.stroke();
 
         var x, y;
-        for (var i = 0; i < segmentCount; i++) {
-            bctx.beginPath();
-            bctx.moveTo(size / 2, size / 2);
-            x = size / 2 * Math.cos(2 * Math.PI / segmentCount * i) + size / 2;
-            y = size / 2 * Math.sin(2 * Math.PI / segmentCount * i) + size / 2;
-            bctx.lineTo(x, y);
-            bctx.stroke()
+        for (var i = 0; i < segments; i++) {
+            csctx.beginPath();
+            csctx.moveTo(size / 2, size / 2);
+            x = size / 2 * Math.cos(2 * Math.PI / segments * i) + size / 2;
+            y = size / 2 * Math.sin(2 * Math.PI / segments * i) + size / 2;
+            csctx.lineTo(x, y);
+            csctx.stroke()
         }
-        bctx.restore();
+        csctx.restore();
     }
 
     function startListeners() {
@@ -57,20 +84,43 @@
             canvasEvent(e)
         });
 
-        $segmentInput.on('change', function () {
-            readSegments();
-            ctx.clearRect(0,0,size,size);
+        $(newLayerButton).on('click', function (e) {
+            var num = $segmentInput.val();
+            newLayer(num);
         })
     }
 
+
+    function getCanvasPos(e) {
+
+        var mouseX = e.clientX + window.pageXOffset;
+        var mouseY = e.clientY + window.pageYOffset;
+
+        var _x = c.offsetLeft;
+        var _y = c.offsetTop;
+        var parent = c;
+        while(parent = parent.offsetParent) {
+            _x += parent.offsetLeft - parent.scrollLeft;
+            _y += parent.offsetTop - parent.scrollTop;
+        }
+
+        return {
+            x : mouseX-_x,
+            y : mouseY-_y
+        }
+    }
+
+
     //props: http://stackoverflow.com/a/8398189
     function canvasEvent(e) {
+        var pos;
         switch (e.type) {
             case "mousedown":
                 prevX = currX;
                 prevY = currY;
-                currX = e.clientX - c.offsetLeft;
-                currY = e.clientY - c.offsetTop;
+                pos = getCanvasPos(e);
+                currX=  pos.x;
+                currY=  pos.y;
                 flag = true;
                 dot_flag = true;
                 if (dot_flag) {
@@ -87,8 +137,9 @@
                 if (flag) {
                     prevX = currX;
                     prevY = currY;
-                    currX = e.clientX - c.offsetLeft;
-                    currY = e.clientY - c.offsetTop;
+                    pos = getCanvasPos(e);
+                    currX=  pos.x;
+                    currY=  pos.y;
                     ctx.beginPath();
                     ctx.moveTo(prevX, prevY);
                     ctx.lineTo(currX, currY);
@@ -103,16 +154,18 @@
     }
 
     function revolve() {
-        mctx.save();
-        mctx.translate(size / 2, size / 2);
-        for (var i = 0; i < segmentCount; i++) {
-            mctx.rotate(Math.PI * 2 / segmentCount);
-            mctx.drawImage(c, 0, 0, size, size, -size / 2, -size / 2, size, size);
+
+        ccctx.save();
+        ccctx.clearRect(0, 0, size, size); //prevents anti-aliasing/opacity visual issues.
+        ccctx.translate(size / 2, size / 2);
+        for (var i = 0; i < cc.segments; i++) {
+            console.log(size);
+            ccctx.rotate(Math.PI * 2 / cc.segments);
+            ccctx.drawImage(c, 0, 0, size, size, -size / 2, -size / 2, size, size);
         }
-        mctx.restore();
+        ccctx.restore();
     }
 
-    initCanvas();
-    startListeners();
+    init();
 
 }(jQuery));

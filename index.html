@@ -7,12 +7,32 @@
 </head>
 <body>
 
-<canvas id="backgroundCanvas" class="canvas">Browser does not support canvas.</canvas>
-<canvas id="mainCanvas" class="canvas">Browser does not support canvas.</canvas>
-<canvas id="drawingCanvas" class="canvas">Browser does not support canvas.</canvas>
+<div id="header">
+    <h2><a href="http://github.com/mtnewton/sym-paint">sym-paint</a></h2>
+</div>
+<div id="content">
+    <div id="sidebar">
 
-<div id="controls">
-    <input id="segment-input" type="number" value="8" placeholder="Sym Count">
+        <div id="new-layer-container">
+
+            <input id="segment-input" type="number" value="8" placeholder="Sym Count"/>
+            <input id="new-layer-button" type="button" value="New Layer"/>
+
+        </div>
+
+
+        <div id="layers-container">
+
+        </div>
+
+    </div>
+
+    <div id="canvas-container">
+
+        <canvas id="c-segments">Browser does not support canvas.</canvas>
+        <canvas id="c-input">Browser does not support canvas.</canvas>
+
+    </div>
 </div>
 
 <script src="bower_components/jquery/dist/jquery.js"></script>

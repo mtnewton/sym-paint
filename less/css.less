@@ -1,4 +1,8 @@
 @sidebar-bg: lightgrey;
+@active-border: #5685ff;
+
+@sidebar-width: 200px;
+@header-height: 45px;
 
 .disable-user-select() {
   -webkit-user-select: none;
@@ -20,7 +24,8 @@ html, body {
 }
 
 #header {
-  width:100%;
+  width: 100%;
+  height: @header-height;
   background-color: darken(@sidebar-bg, 20%);
   h2 {
     padding: 8px;
@@ -29,22 +34,25 @@ html, body {
 
 #content {
   display: table;
-  height:100%
+  height: 100%
 }
 
 #sidebar {
-  display: table-cell;
-  position:relative;
-  width: 200px;
-  height: 100%;
+  position: absolute;
+  width: ~"calc(@{sidebar-width} - 16px)";
+  height: ~"calc(100% - @{header-height})";
+  top: @header-height;
+  left:0;
   background-color: @sidebar-bg;
   padding: 8px;
 }
 
 #canvas-container {
-  display: table-cell;
-  width: 100%;
-  position:relative;
+  position: absolute;
+  width: ~"calc(100% - @{sidebar-width})";
+  height: ~"calc(100% - @{header-height})";
+  top: @header-height;
+  left: @sidebar-width;
 
   canvas {
     display: block;
@@ -57,4 +65,24 @@ html, body {
   }
 }
 
+#layers-container {
+  margin-top: 8px;
 
+  .layer-thumbnail.active{
+      border: 3px dashed @active-border;
+      margin: 0 0 8px 0;
+  }
+
+  .layer-thumbnail {
+    position: relative;
+    background-color: lighten(@sidebar-bg, 20%);
+    margin: 3px 3px 11px 3px;
+    float:left;
+
+    label {
+      position: absolute;
+      top:0;
+      left:0;
+    }
+  }
+}

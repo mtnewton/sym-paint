@@ -9,7 +9,8 @@
     var $segmentInput = $("#segment-input");
     var newLayerButton = document.getElementById('new-layer-button');
     var prevX, prevY, currX, currY, flag = false, dot_flag = false;
-    var layers = [], currentLayer;
+    var layers = [], currentLayer, layerIdIncrement = 1;
+    var $layerTemplate = $($('#layer-template').html()).clone(true);
 
 
 
@@ -40,7 +41,7 @@
 
     function newLayer(segmentCount) {
         var newCanvas = document.createElement('canvas');
-        newCanvas.id = (new Date()).getTime();
+        newCanvas.id = layerIdIncrement++;
         newCanvas.width = size;
         newCanvas.height = size;
         newCanvas.segments = segmentCount;
@@ -53,9 +54,46 @@
     function updateLayersContainer(){
         layersContainer = $('#layers-container');
         layersContainer.html("");
-        for (var i=0; i<layers.length; i++) {
-            layersContainer.append(layers[i].id+"\n");
+        for (var i=layers.length-1; i>=0; i--) {
+
+            var $layer = $layerTemplate.clone(true);
+
+            var $label = $layer.find('label');
+            $label.html("Layer "+ layers[i].id + " (" + layers[i].segments + " segments)");
+            $label.after(getThumbnail(layers[i], 150));
+
+            if(i==currentLayer) {
+                $layer.addClass('active');
+            }
+
+            layersContainer.append($layer);
         }
+    }
+
+    function getThumbnail(drawing, width) {
+        var thumb = document.createElement("canvas");
+        var ratio = drawing.height/drawing.width;
+        thumb.width = width;
+        thumb.height = ratio * width;
+        thumb.getContext("2d").drawImage(drawing, 0, 0, thumb.width, thumb.height);
+        return thumb
+    }
+
+    function updateActiveThumbnail() {
+
+        var $updatedLayer = $layerTemplate.clone(true);
+        var $activeLayer = $('#layers-container').find('.active');
+
+        var $label = $updatedLayer.find('label');
+        $label.html("Layer "+ layers[currentLayer].id + " (" + layers[currentLayer].segments + " segments)");
+        $label.after(getThumbnail(layers[currentLayer], 150));
+        $updatedLayer.addClass('active');
+
+        $activeLayer.after($updatedLayer);
+        $activeLayer.remove();
+
+
+
     }
 
     function drawSegments() {
@@ -159,11 +197,11 @@
         ccctx.clearRect(0, 0, size, size); //prevents anti-aliasing/opacity visual issues.
         ccctx.translate(size / 2, size / 2);
         for (var i = 0; i < cc.segments; i++) {
-            console.log(size);
             ccctx.rotate(Math.PI * 2 / cc.segments);
             ccctx.drawImage(c, 0, 0, size, size, -size / 2, -size / 2, size, size);
         }
         ccctx.restore();
+        updateActiveThumbnail();
     }
 
     init();
